@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  {% include head.html %}
+
+  <body>
+    <nav class="nav-main">
+      <ul>
+        <li class="logo"><a class="hvr-ripple-out" href="{{ site.baseurl }}/">A</a></li>
+        <li class="hvr-underline-reveal"><a href="{{ site.baseurl }}/blog/">blog</a></li>
+      </ul>
+    </nav>
+
+    <div class="container content">
+      <main>
+        {{ content }}
+      </main>
+
+      <footer class="footer">
+        <div class="ftr-links">
+          <a href="https://github.com/arapulido"><i class="fa fa-github-alt"></i></a>
+          <a href="https://twitter.com/arapulido"><i class="fa fa-twitter"></i></a>
+        </div>
+        <small>
+            <span>Powered by <a href="https://jekyllrb.com/">Jekyll</a> and <a href="https://github.com/nicoelayda/celeste">Celeste</a></span>
+        </small>
+      </footer>
+    </div>
+
+  </body>
+</html>
