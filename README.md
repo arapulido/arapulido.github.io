@@ -1,11 +1,10 @@
-# celeste
+# Ara's blog
+This is the source of my blog, available [here](https://arapulido.github.io).
 
-Celeste is a lightweight Jekyll theme that features a minimalist, content-first design. It places your content center stage and lets your readers view them in a clutter-free environment without visual distractions. It is based on [Poole](https://github.com/poole/poole), the Jekyll butler, by [@mdo](https://github.com/mdo).
-
-![Celeste Preview](https://user-images.githubusercontent.com/4868132/48317284-981f4080-e62a-11e8-94e4-f3d7db9506a7.png)
-
-You can check out Celeste in action in [the demo site](https://nicoelayda.github.io/celeste).
+All posts authored by Ara Pulido, unless otherwise stated.
 
 ## License
+All content (unless otherwise stated) is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/legalcode).
 
-MIT. See [LICENSE](https://github.com/nicoelayda/celeste/blob/master/LICENSE).
+## Theme
+This blog uses the [Celeste Jekyll theme](https://github.com/nicoelayda/celeste), which is licensed under [the MIT license](https://github.com/nicoelayda/celeste/blob/master/LICENSE).
