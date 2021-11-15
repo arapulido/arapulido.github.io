@@ -23,11 +23,11 @@ To make things easier, the Datadog agent in Kubernetes collects a set of tags re
 
 But there are tags that the agent collects that can increase the cardinality of a metric, for example, `pod_name`. `pod_name` is a tag with a very high cardinality, as pods are ephemeral, and when part of a Deployment or Daemonset, they take a different name every time they get rescheduled.
 
-To make sure that the user is in control of what tags to emit, the set of tags that are sent by default by the agent is configurable, using the environment variables `DD_CHECKS_TAG_CARDINALITY` and `DD_DOGSTATSD_TAG_CARDINALITY`. These variables take the values of `low`, `orchestrator`, `high` and default to `low`. `pod_name`, for example, is only emitted for a check if `DD_CHECKS_TAG_CARDINALITY` is set to `orchestrator`.
+To make sure that the user is in control of what tags to emit, the set of tags that are sent by default by the agent is configurable, using the environment variables `DD_CHECKS_TAG_CARDINALITY` and `DD_DOGSTATSD_TAG_CARDINALITY`. These variables take the values of `low`, `orchestrator`, `high` and default to `low`. `pod_name`, for example, is only emitted for a check if `DD_CHECKS_TAG_CARDINALITY` is set to `orchestrator` or `high`.
 
 [The full list of out-of-the-box tags the Kubernetes agent emits, and their level of cardinality, is available in the official documentation](https://docs.datadoghq.com/agent/kubernetes/tag/?tab=containerizedagent#out-of-the-box-tags).
 
-# But if the default is `low`, why am I seeing some metrics emitting `pod_name`
+# But if the default is `low`, why am I seeing some metrics emitting `pod_name`?
 
 There are several integrations that override the default cardinality value, as for the type of metrics they emit, they require a set of tags to really be useful.
 
