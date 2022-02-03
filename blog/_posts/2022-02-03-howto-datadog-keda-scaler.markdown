@@ -22,7 +22,7 @@ keda-operator                     1/1     1            1           49m
 keda-operator-metrics-apiserver   1/1     1            1           49m
 ```
 
-The `keda-operator` will be the controller for your `ScaledObjects` and `TriggerAuthentications` objects and will drive the creation of deletion of the corresponding HPA objects. The `keda-operator-metrics-apiserver` will implement the Custom Metrics Server API, that the HPA controller will use to get the needed metrics to drive the scaling events.
+The `keda-operator` will be the controller for your `ScaledObjects` and `TriggerAuthentications` objects and will drive the creation or deletion of the corresponding HPA objects. The `keda-operator-metrics-apiserver` will implement the Custom Metrics Server API, that the HPA controller will use to get the needed metrics to drive the scaling events.
 
 # Deploying Datadog
 
