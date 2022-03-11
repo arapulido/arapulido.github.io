@@ -1,0 +1,45 @@
+---
+layout: post
+title: "Understanding Datadog logs preprocessing"
+date: 2022-03-11
+---
+
+If you are a user of Datadog's log management product, you may be already familiar with [logs pipelines](https://docs.datadoghq.com/logs/log_configuration/pipelines/) and [processors](https://docs.datadoghq.com/logs/log_configuration/processors/) and how they can help extract your logs relevant data, enhacing search and allowing to edit your logs to enrich them with other type of data.
+
+![Datadog log pipelines and processors](/img/datadog_log_pipelines.png)
+
+Pipelines are executed in order, meaning that the output log entry of a pipeline is the input of the next one, until there are no more enabled pipelines.
+
+But what you may not know is that before a log entry goes through the different pipelines, there is an extra, special pipeline that cannot be disabled and that process the log entry if this comes in a JSON format, the [JSON Preprocessing pipeline](https://docs.datadoghq.com/logs/log_configuration/pipelines/?tab=source#preprocessing).
+
+# The JSON Preprocessing pipeline
+
+There are a series of reserved attributes for logs at Datadog that are particularly important for log management and data correlation at Datadog: `date`, `host`, `service`, `status`, `traceid` and `message`. 
+
+If the log entry is in JSON format, Datadog tries to parse those elements in the Preprocessing pipeline, before the rest of the pipelines parse the log entry.
+
+The attributes that will define those special parameters for your logs are predefined by Datadog. For example, if your JSON log has a `host` attribute, its value will be used as the host for this particular log entry.
+
+If you are using the Datadog log agent or any of the default Datadog integrations, the log entries will come with the attributes that the Preprocessing pipeline accepts.
+
+# Changing the default attributes
+
+If you are sending your logs from log shippers with different attributes or with custom attributes you can modify the Preprocessing pipeline to make sure that Datadog uses those custom attributes.
+
+For example, if you have log entries with a `server` attribute and you want to use that attribute as the host in Datadog, you can modify the default attributes in the Preprocessing pipeline.
+
+Navigate to [Pipelines](https://app.datadoghq.com/logs/pipelines/pipeline/library) in the Datadog app and select [Preprocessing for JSON logs](https://app.datadoghq.com/logs/pipelines/remapping):
+
+![Edit the Preprocessing pipeline](/img/preprocessing_edit.png)
+
+You will get a modal window with the different attributes used for each of the parameters. They are ordered by precedence. For example, if your log entry has both a `status` and `severity` attributes, `status` will be used for "Status", as it is the first one in that list.
+
+You can add as many attributes as you need for each of the special parameters. In this example we are adding `server` to the host attributes:
+
+![Preprocessing attributes](/img/preprocessing_attributes.png)
+
+New processed logs with a `server` attribute will parse the content of it as host going forward.
+
+# Summary
+
+When defining your log pipelines in Datadog is always useful to know that there is a special pipeline that comes first, the Preprocessing JSON logs pipeline. Users can modify the attributes that are taking into account when parsing log entries with this pipeline.
