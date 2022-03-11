@@ -4,19 +4,19 @@ title: "Understanding Datadog logs preprocessing"
 date: 2022-03-11
 ---
 
-If you are a user of Datadog's log management product, you may be already familiar with [logs pipelines](https://docs.datadoghq.com/logs/log_configuration/pipelines/) and [processors](https://docs.datadoghq.com/logs/log_configuration/processors/) and how they can help extract your logs relevant data, enhacing search and allowing to edit your logs to enrich them with other type of data.
+If you are a user of Datadog's log management product, you may already be familiar with [logs pipelines](https://docs.datadoghq.com/logs/log_configuration/pipelines/) and [processors](https://docs.datadoghq.com/logs/log_configuration/processors/) and how they can help extract your logs relevant data, enhancing search and allowing you to edit logs to enrich them with additional data.
 
 ![Datadog log pipelines and processors](/img/datadog_log_pipelines.png)
 
 Pipelines are executed in order, meaning that the output log entry of a pipeline is the input of the next one, until there are no more enabled pipelines.
 
-But what you may not know is that before a log entry goes through the different pipelines, there is an extra, special pipeline that cannot be disabled and that process the log entry if this comes in a JSON format, the [JSON Preprocessing pipeline](https://docs.datadoghq.com/logs/log_configuration/pipelines/?tab=source#preprocessing).
+But what you may not know is that before a log entry goes through the different pipelines, there is an extra, special pipeline that processes the log entry if this comes in a JSON format, the [JSON Preprocessing pipeline](https://docs.datadoghq.com/logs/log_configuration/pipelines/?tab=source#preprocessing).
 
 # The JSON Preprocessing pipeline
 
 There are a series of reserved attributes for logs at Datadog that are particularly important for log management and data correlation at Datadog: `date`, `host`, `service`, `status`, `traceid` and `message`. 
 
-If the log entry is in JSON format, Datadog tries to parse those elements in the Preprocessing pipeline, before the rest of the pipelines parse the log entry.
+If the log entry is in JSON format, Datadog tries to parse those elements in the Preprocessing pipeline, before the rest of the pipelines parse the log entry. This pipeline cannot be disabled.
 
 The attributes that will define those special parameters for your logs are predefined by Datadog. For example, if your JSON log has a `host` attribute, its value will be used as the host for this particular log entry.
 
@@ -42,4 +42,4 @@ New processed logs with a `server` attribute will parse the content of it as hos
 
 # Summary
 
-When defining your log pipelines in Datadog is always useful to know that there is a special pipeline that comes first, the Preprocessing JSON logs pipeline. Users can modify the attributes that are taking into account when parsing log entries with this pipeline.
+When defining your log pipelines in Datadog it is always useful to know that there is a special pipeline that comes first, the Preprocessing JSON logs pipeline. Users can modify the attributes that are taken into account when parsing log entries with this pipeline.
