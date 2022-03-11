@@ -14,7 +14,7 @@ But what you may not know is that before a log entry goes through the different 
 
 # The JSON Preprocessing pipeline
 
-There are a series of reserved attributes for logs at Datadog that are particularly important for log management and data correlation at Datadog: `date`, `host`, `service`, `status`, `traceid` and `message`. 
+There are a series of reserved attributes for logs at Datadog that are particularly important for log management and data correlation: `date`, `host`, `service`, `status`, `traceid` and `message`. 
 
 If the log entry is in JSON format, Datadog tries to parse those elements in the Preprocessing pipeline, before the rest of the pipelines parse the log entry. This pipeline cannot be disabled.
 
@@ -38,7 +38,7 @@ You can add as many attributes as you need for each of the special parameters. I
 
 ![Preprocessing attributes](/img/preprocessing_attributes.png)
 
-New processed logs with a `server` attribute will parse the content of it as host going forward.
+New processed logs with a `server` attribute will parse its content as host going forward.
 
 # Summary
 
