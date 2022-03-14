@@ -14,7 +14,7 @@ But what you may not know is that before a log entry goes through the different 
 
 # The JSON Preprocessing pipeline
 
-There are a series of reserved attributes for logs at Datadog that are particularly important for log management and data correlation: `date`, `host`, `service`, `status`, `traceid` and `message`. 
+There is a set of [reserved attributes](https://docs.datadoghq.com/logs/log_configuration/attributes_naming_convention/#reserved-attributes) for logs at Datadog that are particularly important for log management and data correlation: `date`, `host`, `service`, `status`, `traceid` and `message`. 
 
 If the log entry is in JSON format, Datadog tries to parse those elements in the Preprocessing pipeline, before the rest of the pipelines parse the log entry. This pipeline cannot be disabled.
 
@@ -39,6 +39,14 @@ You can add as many attributes as you need for each of the special parameters. I
 ![Preprocessing attributes](/img/preprocessing_attributes.png)
 
 New processed logs with a `server` attribute will parse its content as host going forward.
+
+# The special `host` attribute
+
+All reserved attributes are special, but `host` is even more special.
+
+All other reserved attributes can be remap after the preprocessing pipeline, and that's why we have a [date remapper](https://docs.datadoghq.com/logs/log_configuration/processors/?tab=ui#log-date-remapper), [status remapper](https://docs.datadoghq.com/logs/log_configuration/processors/?tab=ui#log-status-remapper), etc.
+
+The `host` attribute is assigned during the preprocessing pipeline and cannot be modified later on. So, if you need to modify the attribute that assigns the host name, make sure to modify the preprocessing pipeline attributes.
 
 # Summary
 
