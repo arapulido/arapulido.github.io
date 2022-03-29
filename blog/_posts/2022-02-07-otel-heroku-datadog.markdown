@@ -14,6 +14,8 @@ The first thing that we need to do is to add the OTEL Collector to our Heroku ap
 
 I have created [a fork of the mentioned buildpack](https://github.com/arapulido/heroku-buildpack-otelcol) adding the possibility to deploy the contrib distribution instead. I have sent [a PR upstream](https://github.com/Djiit/heroku-buildpack-otelcol/pull/3), and I will update this blog post once it is accepted. But, for now, we will be using my fork for this.
 
+> 📝 EDIT: The PR has now been merged, so you can now used the [original buildpack]((https://github.com/Djiit/heroku-buildpack-otelcol)) instead of my fork.
+
 Add this buildpack to your application. The `OTELCOL_CONTRIB` environment variable tells the buildpack to use the Collector contrib distribution:
 
 ```
