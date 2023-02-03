@@ -6,36 +6,38 @@ date: 2023-02-03
 
 The [Datadog Cluster Agent](https://docs.datadoghq.com/containers/cluster_agent/) is a specialized Datadog Agent for Kubernetes clusters that implements features specific to Kubernetes and acts as a proxy between Node Agents and the Kubernetes API.
 
-The Datadog Cluster Agent includes a [Kubernentes MutatingAdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) that is able to modify Kubernetes API requests before they are processed. This allows the Cluster Agent to improve the definitions of Kubernetes resources to improve their observability.
+The Datadog Cluster Agent includes a [Kubernentes MutatingAdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) that is able to modify Kubernetes API requests before they are processed. This allows the Cluster Agent to change the definitions of Kubernetes resources with the goal of improving their observability.
 
-In this post we will explain some of these improvements that are injected in our Kubernetes clusters.
+In this post we will explain some of the improvements that are injected in our Kubernetes clusters.
 
 # Kubernetes Admission Controllers
 
 **Note:** This section explains briefly what Kubernetes Admission Controllers are and how they work. If you already know this, feel free to skip this section)
 
-When a request is made to the Kubernetes API server it goes through a two quite common phases:
+When a request is made to the Kubernetes API server it first goes through two phases:
 
 * Authentication. Is this request authenticated or not?
-* Authorization. Can this person perform this action against this type of resource in this particular namespace? This is mostly covered by RBAC.
+* Authorization. Can this user perform this action against this type of resource in this particular namespace? This is mostly covered by RBAC.
 
 But once the authenticated user is confirmed to be able to perform the selected action, it goes through a third phase: Admission Controllers.
 
-![Kuberetes API requests flow](/img/admission_controllers.jpg)
+![Kubernetes API requests flow](/img/admission_controllers.jpg)
 
 Admissions Controllers are small pieces of code, embedded in the API server binary, that can further validate a request or even mutate it. There is a set of precompiled Admission Controllers that are enabled or disabled using an API server command line argument.
 
-But from all the Admission Controllers available, there are two that are a bit different. These are ValidatingAdmissionWebhook and MutatingAdmissionWebhook. These allow for processes outside the API Server to validate or mutate API requests, as they will call any webhook matching the request.
+From all the Admission Controllers available, there are two that are a bit different. These are the ValidatingAdmissionWebhook and MutatingAdmissionWebhook. These allow for processes outside the API Server to validate or mutate API requests, as they are able to register as a webhook.
 
 The Datadog Cluster Agent implements a webhook registered with the MutatingAdmissionWebhook.
 
-# Enabling the MutatingAdmissionWebhook
+# The Cluster Agent MutatingAdmissionWebhook
 
-The Cluster Agent doesn't enable the MutatingAdmissionWebhook by default. The [official Datadog docs explain how to enable it](https://docs.datadoghq.com/containers/cluster_agent/admission_controller/?tab=operator) depending on the method used to deploy the Datadog Agent.
+We will explain how the webhook works using a sample application. You can reproduce all of the examples below following the instructions in [this GitHub repository](https://github.com/arapulido/datadog-admission-example).
 
-**Note:** you can reproduce all the examples below following the instructions in [this GitHub repository](https://github.com/arapulido/datadog-admission-example).
+## Enabling the MutatingAdmissionWebhook
 
-# Basic resource modifications made by the Cluster Agent
+The first thing that is needed is to enable the MutatingAdmissionWebhook, as it is not enabled by default. The [official Datadog docs explain how to enable it](https://docs.datadoghq.com/containers/cluster_agent/admission_controller/?tab=operator) depending on the method used to deploy the Datadog Agent.
+
+## Basic resource modifications made by the Cluster Agent
 
 Let's check some of the basic modifications that the Datadog MutatingAdmissionWebhook does to a basic Deployment.
 
@@ -99,7 +101,7 @@ spec:
 
 We can see that it has opted-in being modified using the label `admission.datadoghq.com/enabled: "true"`. 
 
-After creating the resource, if we check the resource that is in the cluster, we can see that there are some differences with the one we created:
+After applying this definition, checking the resource that was actually created in the cluster, we can see that there are some differences, as the request was mutated:
 
 ```yaml
     env:
@@ -121,7 +123,9 @@ After creating the resource, if we check the resource that is in the cluster, we
           fieldPath: status.hostIP
 ```
 
-These environment variables are needed to get the right labeled metrics and traces to Datadog. Before the Cluster Agent implemented this MutatingAdmissionWebhook, Datadog users needed to remember to add these environement variables themselves, clutering their resources if they remembered, or not getting the most of Datadog, if they didn't.
+These environment variables are needed to get the right labeled metrics and traces to Datadog. 
+
+Before the Cluster Agent implemented this MutatingAdmissionWebhook, Datadog users needed to remember to add these environement variables themselves, clutering their resources if they remembered, or not getting the most of Datadog, if they didn't.
 
 # Autoinstrumentation library injection
 
@@ -233,6 +237,10 @@ if "DDTRACE_PYTHON_INSTALL_IN_PROGRESS" not in os.environ:
 
 The module basically runs `pip install` to install the `ddtrace` package and, once installed, imports [the module that starts autoinstrumentation](https://github.com/DataDog/dd-trace-py/blob/1.x/ddtrace/bootstrap/sitecustomize.py) and adds it to the `PYTHONPATH`. This is the same module that is called when running `ddtrace-run`, the previous way to autoinstrumnent your Python applications with Datadog instrumentation libraries.
 
+Once the MutatingAdmissionWebhook injects those libraries, we will start seeing traces coming into Datadog without any code modification:
+
+![Traces coming into Datadog](/img/traces.jpg)
+
 # Summary
 
-Enabling the Datadog MutatingAdmissionController in a Datadog monitored Kubernetes cluster helps improving the observablity of the deployed applications. One of the most useful features is the ability to inject and configure the tracing instrumentation libraries, making getting visibility into your application easier than ever. This blog post tried to explain a bit more in detail how this feature works, as it may feel like doing a bit of magic, but, in reality, is a lot simpler than it seems when reading about it.
+Enabling the Datadog MutatingAdmissionController in a Datadog monitored Kubernetes cluster helps improving the observability of the deployed applications. One of the most useful features is the ability to automatically inject and configure the tracing instrumentation libraries, making the process of making your application observable easier than ever.
