@@ -6,7 +6,7 @@ date: 2023-02-03
 
 The [Datadog Cluster Agent](https://docs.datadoghq.com/containers/cluster_agent/) is a specialized Datadog Agent for Kubernetes clusters that implements features specific to Kubernetes and acts as a proxy between Node Agents and the Kubernetes API.
 
-The Datadog Cluster Agent includes a [Kubernentes MutatingAdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) that is able to modify Kubernetes API requests before they are processed. This allows the Cluster Agent to change the definitions of Kubernetes resources with the goal of improving their observability.
+The Datadog Cluster Agent includes a [Kubernetes MutatingAdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) that is able to modify Kubernetes API requests before they are processed. This allows the Cluster Agent to change the definitions of Kubernetes resources with the goal of improving their observability.
 
 In this post we will explain some of the improvements that are injected in our Kubernetes clusters.
 
@@ -125,13 +125,13 @@ After applying this definition, checking the resource that was actually created 
 
 These environment variables are needed to get the right labeled metrics and traces to Datadog. 
 
-Before the Cluster Agent implemented this MutatingAdmissionWebhook, Datadog users needed to remember to add these environement variables themselves, clutering their resources if they remembered, or not getting the most of Datadog, if they didn't.
+Before the Cluster Agent implemented this MutatingAdmissionWebhook, Datadog users needed to remember to add these environment variables themselves, cluttering their resources if they remembered, or not getting the most of Datadog, if they didn't.
 
 # Autoinstrumentation library injection
 
 But the most interesting feature in the MutatingAdmissionWebhook is the ability to automatically inject autoinstrumentation libraries into our pods and start getting traces into Datadog without having to modify our code or our pod definitions.
 
-At the time of writing of this blog post, library injection was available for Javascript, Java, and Python. This sections explains how it works for Python.
+At the time of writing of this blog post, library injection was available for Javascript, Java, and Python. This section explains how it works for Python.
 
 We take the same Deployment definition as the section above, but we add a new annotation to the pod template to enable library injection:
 
@@ -235,7 +235,7 @@ if "DDTRACE_PYTHON_INSTALL_IN_PROGRESS" not in os.environ:
         _configure_ddtrace()
 ```
 
-The module basically runs `pip install` to install the `ddtrace` package and, once installed, imports [the module that starts autoinstrumentation](https://github.com/DataDog/dd-trace-py/blob/1.x/ddtrace/bootstrap/sitecustomize.py) and adds it to the `PYTHONPATH`. This is the same module that is called when running `ddtrace-run`, the previous way to autoinstrumnent your Python applications with Datadog instrumentation libraries.
+The module basically runs `pip install` to install the `ddtrace` package and, once installed, imports [the module that starts autoinstrumentation](https://github.com/DataDog/dd-trace-py/blob/1.x/ddtrace/bootstrap/sitecustomize.py) and adds it to the `PYTHONPATH`. This is the same module that is called when running `ddtrace-run`, the previous way to autoinstrument your Python applications with Datadog instrumentation libraries.
 
 Once the MutatingAdmissionWebhook injects those libraries, we will start seeing traces coming into Datadog without any code modification:
 
@@ -243,4 +243,4 @@ Once the MutatingAdmissionWebhook injects those libraries, we will start seeing 
 
 # Summary
 
-Enabling the Datadog MutatingAdmissionController in a Datadog monitored Kubernetes cluster helps improving the observability of the deployed applications. One of the most useful features is the ability to automatically inject and configure the tracing instrumentation libraries, making the process of making your application observable easier than ever.
+Enabling the Datadog MutatingAdmissionController in a Datadog monitored Kubernetes cluster helps improve the observability of the deployed applications. One of the most useful features is the ability to automatically inject and configure the tracing instrumentation libraries, making the process of making your application observable easier than ever.
