@@ -21,15 +21,15 @@ The Datadog Operator is the Kubernetes controller that will manage the reconcili
 To deploy the Datadog Operator in your cluster you can use Helm:
 
 ```sh
+export DD_API_KEY=<YOUR_DD_API_KEY>
+export DD_APP_KEY=<YOUR_DD_APP_KEY>
+
 helm install my-datadog-operator datadog/datadog-operator --set apiKey=${DD_API_KEY} --set appKey=${DD_APP_KEY} --set datadogMonitor.enabled=true
 ```
 
 We will also create a Kubernetes secret to keep our Datadog API and APP keys:
 
 ```sh
-export DD_API_KEY=<YOUR_DD_API_KEY>
-export DD_APP_KEY=<YOUR_DD_APP_KEY>
-
 kubectl create secret generic datadog-secret --from-literal=api-key=${DD_API_KEY} --from-literal=app-key=${DD_APP_KEY}
 ```
 
@@ -115,7 +115,7 @@ datadog-cluster-agent   1/1     1            1           106m
 
 All the possible configuration options for the `DatadogAgent` resource are available in [its documentation](https://github.com/DataDog/datadog-operator/blob/main/docs/configuration.v1alpha1.md).
 
- ## DatadogMonitor
+## DatadogMonitor
 
 `DatadogMonitor` is a resource that allows you to manage your Datadog Monitors using resource definitions that can be maintained with the rest of your cluster configuration.
 
@@ -157,7 +157,7 @@ NAME              ID          MONITOR STATE   LAST TRANSITION        LAST SYNC  
 pods-restarting   113662729   OK              2023-03-15T10:06:49Z   2023-03-15T10:10:49Z   OK            5m52s
 ```
 
-You can find a set of examples for `DatadogMonitor` resources in their [git repository](https://github.com/DataDog/datadog-operator/tree/main/examples/datadogmonitor).
+You can find a set of examples for `DatadogMonitor` resources with their different monitor types in their [git repository](https://github.com/DataDog/datadog-operator/tree/main/examples/datadogmonitor).
 
 ## DatadogMetric
 
