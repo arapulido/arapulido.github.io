@@ -16,7 +16,7 @@ In this post we’ll explain the Datadog related CRDs that are available, how to
 
 The Datadog Operator is the Kubernetes controller that will manage the reconciliation loop for any Datadog related resource. The Datadog Operator, once deployed in a Kubernetes cluster, will watch the Kubernetes API for any changes related to these resources, and will make the needed changes in the cluster or in the Datadog API.
 
-[ADD a graph of the classic reconciliation loop, but with labels for the Datadog Operator and the different objects, and actions happening in Datadog]
+![Reconciliation Loop](/img/datadog_loop.jpg)
 
 To deploy the Datadog Operator in your cluster you can use Helm:
 
