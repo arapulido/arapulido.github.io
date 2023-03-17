@@ -14,7 +14,7 @@ In this post we’ll explain the Datadog related CRDs that are available, how to
 
 ## The Datadog Operator
 
-The Datadog Operator is the Kubernetes controller that will manage the reconciliation loop for any Datadog related resource. The Datadog Operator, once deployed in a Kubernetes cluster, will watch the Kubernetes API for any changes related to these resources, and will make the needed changes in the cluster or in the Datadog API.
+The Datadog Operator is the Kubernetes controller that will manage the reconciliation loop for some Datadog related resources. The Datadog Operator, once deployed in a Kubernetes cluster, will watch the Kubernetes API for any changes related to these resources, and will make the needed changes in the cluster or in the Datadog API.
 
 ![Reconciliation Loop](/img/datadog_loop.jpg)
 
@@ -196,7 +196,9 @@ spec:
   query: max:nginx.net.request_per_s{kube_container_name:nginx}.rollup(60)
 ```
 
-Once this resource is created, the Cluster Agent will regularly update the value of that query using the Datadog API and will expose the result as a new metric in its External Metrics Server. This "new" metric can now be used in an HPA object. The name of this new metric will take the following pattern: `datadogmetric@<namespace>:<datadogmetric_name>`
+The Cluster Agent acts as the Kubernetes controller for `DatadogMetric` resources, so the Datadog Operator is not required in order to use those.
+
+Once this resource is created, the Cluster Agent will update the value of that query using the Datadog API and will expose the result as a new metric in its External Metrics Server. This "new" metric can now be used in an HPA object. The name of this new metric will take the following pattern: `datadogmetric@<namespace>:<datadogmetric_name>`
 
 So, for the example above, you could create an HPA object with the following specification:
 
