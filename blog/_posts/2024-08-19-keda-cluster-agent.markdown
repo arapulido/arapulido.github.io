@@ -6,16 +6,16 @@ date: 2024-08-19
 
 In February 2022 [we introduced the availability of the Datadog KEDA scaler](https://arapulido.github.io/blog/2022/02/02/intro-datadog-keda-scaler/), allowing KEDA users to use Datadog metrics to drive their autoscaling events. This has been working well over the past two years, but it has a main issue, particularly when scaling the number of `ScaledObjects` that use the Datadog scaler. As the scaler uses the Datadog API to get metrics values, users may reach API rate limits as they scale their KEDA Datadog scaler usage.
 
-For this reason, I decided to contribute again to the KEDA Datadog scaler to be able to use the Datadog Cluster Agent as proxy to gather the metrics, instead of poking the API directly. One of the benefits of this approach is that the Cluster Agent is able to batch the metrics requests to the API, reducing the risk of reaching API rate limits.
+For this reason, I decided to contribute again to the KEDA Datadog scaler for it to be able to use the Datadog Cluster Agent as proxy to gather the metrics, instead of polling the API directly. One of the benefits of this approach is that the Cluster Agent is able to batch the metrics requests to the API, reducing the risk of reaching API rate limits.
 
-This post will be a step by step guide on how to set up both KEDA and the Datadog Cluster Agent to enable metrics gathering using the Cluster Agent as proxy. In this guide will be using the Datadog Operator to deploy the Datadog Agent and Cluster Agent, but you can also use the Datadog Helm chart following [the KEDA Datadog scaler documentation](https://keda.sh/docs/2.15/scalers/datadog/#using-the-datadog-cluster-agent-experimental)
+This post will be a step by step guide on how to set up both KEDA and the Datadog Cluster Agent to enable metrics gathering using the Cluster Agent as proxy. In this guide we will be using the Datadog Operator to deploy the Datadog Agent and Cluster Agent, but you can also use the Datadog Helm chart following [the KEDA Datadog scaler documentation](https://keda.sh/docs/2.15/scalers/datadog/#using-the-datadog-cluster-agent-experimental)
 
 
 ## Deploying Datadog
 
-We will start with a clean simple 1 node Kubernetes cluster.
+We start with a clean simple 1 node Kubernetes cluster.
 
-1. First, we deploy the Datadog Operator. To use the Cluster Agent as proxy for KEDA, at least version `1.8.0` of the Datadog Operator is needed:
+First, we deploy the Datadog Operator using Helm To use the Cluster Agent as proxy for KEDA, at least version `1.8.0` of the Datadog Operator is needed:
 
 ```
 kubectl create ns datadog
@@ -24,22 +24,24 @@ helm repo update
 helm install my-datadog-operator datadog/datadog-operator --set image.tag=1.8.0 --namespace=datadog
 ```
 
-2. Check that the Operator pod is running correctly:
+Check that the Operator pod is running correctly:
+
+```sh
+kubectl get pods -n datadog
+```
 
 ```
-kubectl get pods -n datadog
-
 NAME                                   READY   STATUS    RESTARTS   AGE
 my-datadog-operator-667d4d6645-725j2   1/1     Running   0          2m3s
 ```
 
-3. Create a secret with your Datadog account API and APP keys:
+We will create a secret with our Datadog account API and APP keys:
 
 ```
 kubectl create secret generic datadog-secret -n datadog --from-literal api-key=<DATADOG_API_KEY> --from-literal app-key=<DATADOG_APP_KEY>
 ```
 
-4. Deploy the Datadog Agent with a minimum of the configuration below to enable the Cluster Agent as proxy:
+In order to enable the Cluster Agent as proxy, we will deploy the Datadog Agent with the minimum configuration below:
 
 ```yaml
 apiVersion: datadoghq.com/v2alpha1
@@ -68,17 +70,19 @@ spec:
       env: [{name: DD_EXTERNAL_METRICS_PROVIDER_ENABLE_DATADOGMETRIC_AUTOGEN, value: "false"}]
 ```
 
-5. Deploy the Datadog Agent and Cluster Agent applying the configuration above:
+Deploy the Datadog Agent and Cluster Agent by applying the definition above:
 
 ```sh
 kubectl apply -f /path/to/your/datadog-agent.yaml
 ```
 
-6. Check that the Node Agent and Cluster Agent pods are running correctly:
+You can check that the Node Agent and Cluster Agent pods are running correctly:
+
+```sh
+kubectl get pods -n datadog
+```
 
 ```
-kubectl get pods -n datadog
-
 NAME                                    READY   STATUS    RESTARTS   AGE
 datadog-agent-jncmj                     3/3     Running   0          64s
 datadog-cluster-agent-97655d49c-jf6lp   1/1     Running   0          6m30s
@@ -87,9 +91,7 @@ my-datadog-operator-667d4d6645-725j2    1/1     Running   0          17m
 
 ## Deploying KEDA
 
-Support to use the Cluster Agent as proxy was added in version `2.15` of KEDA, so that's the minimum version that we need to deploy.
-
-1. Deploy KEDA using the Helm chart:
+Support to use the Cluster Agent as proxy was added in version `2.15` of KEDA, so that's the minimum version that we need to deploy. We will deploy KEDA using the Helm chart:
 
 ```sh
 helm repo add kedacore https://kedacore.github.io/charts
@@ -97,10 +99,13 @@ helm repo update
 helm install keda kedacore/keda --namespace keda --create-namespace --version=2.15.0
 ```
 
-2. Check that the KEDA pods are running correctly:
+Check that the KEDA pods are running correctly:
 
 ```sh
 kubectl get pods -n keda
+```
+
+```
 NAME                                               READY   STATUS    RESTARTS       AGE
 keda-admission-webhooks-79b9989f88-7g26p           1/1     Running   0              2m6s
 keda-operator-fbc8b6c8f-84nqc                      1/1     Running   1 (119s ago)   2m6s
@@ -111,21 +116,21 @@ keda-operator-metrics-apiserver-69dc6df9db-n8sxf   1/1     Running   0          
 
 The KEDA Datadog scaler will connect to the Cluster Agent through a Service Account, that will require enough permissions to access the Kubernetes metrics APIs.
 
-For this example we will work on a specific namespace for everything related to the KEDA Datadog scaler.
-
-1. Create the namespace:
+For this example we will create a specific namespace for everything related to the KEDA Datadog scaler:
 
 ```sh
 kubectl create ns datadog-keda
 ```
 
-2. Create a service account that will be used to connect to the Cluster Agent:
+We will create a service account that will be used to connect to the Cluster Agent, a ClusterRole to read the external metrics API, and we will bind both.
+
+Create the service account:
 
 ```sh
  kubectl create sa datadog-metrics-reader -n datadog-keda
 ```
 
-3. Create a ClusterRole that can read the Kubernetes metrics APIs:
+Create a ClusterRole that can at least read the Kubernetes metrics APIs:
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -143,11 +148,13 @@ rules:
   - list
 ```
 
+Create the ClusterRole by applying the definition above:
+
 ```sh
 kubectl apply -f /path/to/your/datadog-cluster-role.yaml
 ```
 
-4. Bind the ClusterRole with the previously created ServiceAccount:
+Bind the ClusterRole with the previously created ServiceAccount:
 
 ```yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -164,11 +171,13 @@ subjects:
   namespace: datadog-keda
 ```
 
+Create the ClusterRoleBinding by applying the definition above:
+
 ```sh
 kubectl apply -f /path/to/your/datadog-cluster-role-binding.yaml
 ```
 
-5. Create a secret to hold the service account token that we will be using to connect to the Cluster Agent:
+We will create a secret to hold the service account token that we will be using to connect to the Cluster Agent:
 
 ```yaml
 apiVersion: v1
@@ -181,6 +190,8 @@ metadata:
 type: kubernetes.io/service-account-token
 ```
 
+Create it by applying the definition above:
+
 ```sh
 kubectl apply -f /path/to/your/sa-token-secret.yaml
 ```
@@ -189,13 +200,13 @@ kubectl apply -f /path/to/your/sa-token-secret.yaml
 
 We will define a secret and a corresponding [TriggerAuthentication](https://keda.sh/docs/2.14/concepts/authentication/#re-use-credentials-and-delegate-auth-with-triggerauthentication) object to hold the configuration to connect to the Cluster Agent, so we can reuse it in several ScaledObject definitions if needed.
 
-1. Create a Secret with the configuration:
+First, let's create a Secret with the configuration of our Cluster Agent deployment:
 
 ```sh
 kubectl create secret generic datadog-config -n datadog-keda --from-literal=authMode=bearer --from-literal=datadogNamespace=datadog --from-literal=unsafeSsl=true --from-literal=datadogMetricsService=datadog-cluster-agent-metrics-server
 ```
 
-2. Create a TriggerAuthentication object pointing to this configuration and the service account token:
+Then, let's create a TriggerAuthentication object pointing to this configuration and the service account token:
 
 ```yaml
 apiVersion: keda.sh/v1alpha1
@@ -222,13 +233,15 @@ spec:
       key: datadogMetricsService
 ```
 
+Apply the definition above:
+
 ```sh
 kubectl apply -f /path/to/your/trigger-authentication.yaml
 ```
 
 ## Create a Deployment to scale and a ScaleObject to define our scaling needs
 
-1. Create the following Deployment that we will be using in our example. We will be using NGINX and the NGINX Datadog integration to ensure we have traffic metrics in our Datadog account
+We will be using NGINX and the NGINX Datadog integration to ensure we have traffic metrics in our Datadog account.
 
 ```yaml
 apiVersion: v1
@@ -308,13 +321,14 @@ spec:
         app: nginx
 ```
 
+
+Create the NGINX deployment that we will be using in our example by applying the definition above:
+
 ```sh
 kubectl apply -f /path/to/your/nginx-deployment.yaml
 ```
 
 To notify the Cluster Agent that it needs to retrieve a specific metric from Datadog, we need to define a [DatadogMetric](https://docs.datadoghq.com/containers/guide/cluster_agent_autoscaling_metrics/?tab=datadogoperator#create-the-datadogmetric-object) object, specifying the `always-active: true` annotation to ensure the Cluster Agent retrieves the metric value, even though it is not registered in the Kubernetes API. We will use the requests per second metric:
-
-2. Create the DatadogMetric object
 
 ```yaml
 apiVersion: datadoghq.com/v1alpha1
@@ -327,6 +341,8 @@ metadata:
 spec:
   query: sum:nginx.net.request_per_s{kube_deployment:nginx}
 ```
+
+Create the DatadogMetric resource by applying the definition above:
 
 ```sh
 kubectl apply -f /path/to/your/datadog-metric.yaml
@@ -368,6 +384,8 @@ spec:
     authenticationRef:
       name: datadog-trigger-auth
 ```
+
+Apply the definition above:
 
 ```sh
 kubectl apply -f /path/to/your/datadog-scaled-object.yaml
