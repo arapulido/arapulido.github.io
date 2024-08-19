@@ -8,6 +8,8 @@ In February 2022 [we introduced the availability of the Datadog KEDA scaler](htt
 
 For this reason, I decided to contribute again to the KEDA Datadog scaler for it to be able to use the Datadog Cluster Agent as proxy to gather the metrics, instead of polling the API directly. One of the benefits of this approach is that the Cluster Agent is able to batch the metrics requests to the API, reducing the risk of reaching API rate limits.
 
+![KEDA using Cluster Agent as proxy](/img/keda-ca-proxy.png)
+
 This post will be a step by step guide on how to set up both KEDA and the Datadog Cluster Agent to enable metrics gathering using the Cluster Agent as proxy. In this guide we will be using the Datadog Operator to deploy the Datadog Agent and Cluster Agent, but you can also use the Datadog Helm chart following [the KEDA Datadog scaler documentation](https://keda.sh/docs/2.15/scalers/datadog/#using-the-datadog-cluster-agent-experimental)
 
 
